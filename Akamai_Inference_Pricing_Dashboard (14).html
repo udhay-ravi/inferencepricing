@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Akamai Serverless Inference — Pricing & Positioning Dashboard</title>
+<style>
+:root{--navy:#0B2E4F;--navy2:#173f66;--orange:#F26B21;--ink:#1c2733;--muted:#6b7785;
+--line:#d9e0e8;--bg:#eef2f6;--card:#ffffff;--good:#1f8f5f;--chip:#eaf1f8;}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:var(--bg);font-size:13px;line-height:1.45}
+h1{font-size:19px;margin:0}h2{font-size:14px;margin:0 0 10px;color:var(--navy)}
+.top{background:var(--navy);color:#fff;padding:16px 22px}
+.top .sub{color:#b9c9db;font-size:12px;margin-top:3px}
+.wrap{max-width:1240px;margin:0 auto;padding:18px 22px 60px}
+.grid{display:grid;gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
+.row{display:flex;flex-wrap:wrap;gap:16px}
+.ctrl{margin-bottom:12px}
+.ctrl label{display:block;font-weight:bold;font-size:12px;margin-bottom:4px;color:var(--navy)}
+.ctrl .val{float:right;font-weight:bold;color:var(--orange)}
+input[type=range]{width:100%;accent-color:var(--orange)}
+input[type=number]{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:13px}
+select{width:100%;padding:7px 8px;border:1px solid var(--line);border-radius:6px;font-size:13px;background:#fff}
+.pillbtn{background:var(--navy);color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:bold;cursor:pointer}
+.pillbtn.alt{background:var(--orange)}
+.small{font-size:11px;color:var(--muted)}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th,td{border:1px solid var(--line);padding:5px 7px;text-align:right}
+th{background:var(--navy);color:#fff;font-weight:bold}
+td.l,th.l{text-align:left}
+.k{background:var(--chip);border-radius:8px;padding:10px 12px;text-align:center;flex:1}
+.k .n{font-size:20px;font-weight:bold;color:var(--navy)}
+.k .lab{font-size:11px;color:var(--muted)}
+.aka{color:var(--orange);font-weight:bold}
+.legend span{display:inline-block;margin-right:14px;font-size:11px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle}
+.hide{display:none}
+.heat table{border-collapse:collapse;width:100%}
+.heat td,.heat th{border:1px solid #fff;padding:3px 3px;text-align:center;font-size:10px}
+.heat th{background:var(--navy);color:#fff;font-weight:bold}
+.heat td.rh{background:var(--navy);color:#fff;font-weight:bold}
+.note{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4}
+.mixrow{display:flex;gap:8px}.mixrow>div{flex:1}
+.editperf{width:70px}
+.tabs{display:flex;gap:8px;margin:2px 0 12px}
+.tab{font-size:13px;font-weight:bold;padding:9px 20px;border:1px solid var(--navy);background:#fff;color:var(--navy);border-radius:20px;cursor:pointer}
+.tab.active{background:var(--navy);color:#fff}
+.dtable{border-collapse:collapse;width:100%;font-size:12px}
+.dtable th,.dtable td{border-bottom:1px solid var(--line);padding:4px 8px;text-align:right;white-space:nowrap}
+.dtable th.l,.dtable td.l{text-align:left}
+.dtable th{background:#eef2f7;color:var(--navy);position:sticky;top:0}
+#maptip{position:fixed;z-index:60;pointer-events:none;background:#0B2E4F;color:#fff;font-size:11px;line-height:1.45;padding:6px 9px;border-radius:6px;box-shadow:0 3px 10px rgba(0,0,0,.28);display:none;white-space:nowrap}
+.card svg text{pointer-events:none}
+.selbtn{font-size:11px;padding:3px 10px;margin-right:5px;border:1px solid var(--navy);background:#fff;color:var(--navy);border-radius:12px;cursor:pointer}
+.chip{display:inline-block;font-size:11px;padding:2px 8px;margin:2px 4px 2px 0;border-radius:11px;border:1px solid var(--line);cursor:pointer;user-select:none}
+.chip.on{background:#3b6ea5;color:#fff;border-color:#3b6ea5}
+.chip.noperf{opacity:0.5}
+svg{width:100%;height:auto;display:block}
+.fcgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.splitrow{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.splitrow label{flex:1;font-size:12px}.splitrow input{width:64px}
+.sumbad{color:#c0392b;font-weight:bold}
+</style></head>
+<body>
+<div id="maptip"></div>
+<div class="top"><h1>Akamai Serverless Inference — Pricing &amp; Market Positioning</h1>
+<div class="sub">White-labelled inference. Provider pricing and performance from OpenRouter, retrieved 20 Aug 2026.</div></div>
+<div class="wrap"><div class="tabs">
+  <button class="tab active" id="tabModelBtn" onclick="showTab('model')">Interactive pricing model</button>
+  <button class="tab" id="tabFcBtn" onclick="showTab('fc')">Forecast</button>
+  <button class="tab" id="tabRecBtn" onclick="showTab('rec')">Recommendation</button>
+</div></div>
+<div id="tab-model">
+<div class="wrap grid">
+
+<div class="row">
+  <div class="card" style="flex:1;min-width:300px">
+    <h2>Pricing parameters</h2>
+    <div class="ctrl"><label>Pricing basis (list price &amp; sensitivity)</label>
+      <select id="model"></select></div>
+    <div class="ctrl"><label>Partner discount won (d) <span class="val" id="dV"></span></label>
+      <input type="range" id="d" min="0" max="60" step="1"></div>
+    <div class="ctrl"><label>Akamai markup (m) <span class="val" id="mV"></span></label>
+      <input type="range" id="m" min="0" max="100" step="1"></div>
+    <div class="row">
+      <div class="ctrl" style="flex:1"><label>Subscription price ($/user/mo)</label><input type="number" id="sub" step="1"></div>
+      <div class="ctrl" style="flex:1"><label>Free tokens in bundle (M/mo)</label><input type="number" id="free" step="1"></div>
+    </div>
+    <div class="ctrl"><label>Assumed usage per user (M tokens/mo) <span class="small">used to price the subscription on the maps</span></label><input type="number" id="tpu" step="1"></div>
+    <div class="ctrl"><label>Token mix % (input / cached / output)</label>
+      <div class="mixrow"><div><input type="number" id="mi" step="1"></div><div><input type="number" id="mc" step="1"></div><div><input type="number" id="mo" step="1"></div></div></div>
+    <div class="note" id="mixnote"></div>
+  </div>
+
+  <div class="card" style="flex:1;min-width:300px">
+    <h2>Akamai list price — <span id="mlab"></span></h2>
+    <table id="priceTbl"></table>
+    <div class="note" id="capnote"></div>
+    <div id="m3calc" style="margin-top:8px"></div>
+    <div class="note">Model 1 marks up each token type (input, cached, output) then caps each at the partner's retail for that type, so the cap is per token type, not on the blended price. Model 2 has no cap. Model 3 is a subscription; the figure shown is the effective $/1M at the assumed usage, with overage billed at partner retail. Cost basis = <span id="basisLab"></span> retail.</div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Positioning maps — Akamai vs market players</h2>
+  <div class="legend"><span><i class="dot" style="background:#3b6ea5"></i>Provider</span>
+    <span><i class="dot" style="background:#F26B21"></i>Akamai (M1 / M2 / M3)</span>
+    <span class="small">Price on x, OpenRouter-measured performance on y. Akamai sits at its cost-basis partner's performance (white-label parity); only its price moves.</span></div>
+  <div class="row" style="align-items:center;gap:10px;margin:8px 0 2px">
+    <div><span style="font-weight:bold;font-size:12px;color:var(--navy)">Positioning basis&nbsp;</span>
+      <select id="mapbasis" style="width:auto;display:inline-block"></select></div>
+    <span class="small">Blended across all 6 models, or a single model to see Akamai head-to-head with competitors for that model.</span>
+  </div>
+  <div style="margin:6px 0 4px">
+    <span style="font-weight:bold;font-size:12px;color:var(--navy)">Providers on the map&nbsp;</span>
+    <button class="selbtn" id="selAll">All</button>
+    <button class="selbtn" id="selMain">Mainstream</button>
+    <button class="selbtn" id="selNone">None</button>
+    <span class="small" id="selCount"></span>
+    <div id="provPick" style="margin-top:6px"></div>
+  </div>
+  <div style="margin-top:10px">
+    <div style="width:100%;max-width:1040px;margin:0 auto 10px"><svg id="mapLat" viewBox="0 0 980 560" style="width:100%"></svg></div>
+    <div style="width:100%;max-width:1040px;margin:0 auto"><svg id="mapTps" viewBox="0 0 980 560" style="width:100%"></svg></div>
+  </div>
+  <p class="note">Latency and throughput are OpenRouter's measured p50 values and are read-only. Providers marked &deg; have no measured performance on OpenRouter (including BaseTen on several models), so they carry a price but no point on these maps. Where the cost-basis partner has no measured performance, Akamai is drawn as a vertical price line rather than a point.</p>
+  <p class="note" id="srcnote"></p>
+</div>
+
+<div class="card">
+  <h2>Sensitivity — margin by discount &times; markup</h2>
+  <p class="note">Margin is on the Baseten cost basis, cost = partner retail &times; (1 &minus; d). Left grid has no ceiling, so margin = m / (1 + m), flat across discount. Right grid caps the list at the chosen ceiling. Rows are discount, columns are markup. Green is high margin, red is negative. The cell matching your current discount and markup is outlined.</p>
+  <div class="row" style="align-items:center;gap:12px;margin:6px 0 4px">
+    <div><label style="font-weight:bold;font-size:12px;color:var(--navy)">Ceiling for the right grid&nbsp;</label>
+      <select id="ceil" style="width:auto;display:inline-block">
+        <option value="baseten">Baseten retail</option>
+        <option value="market">Market average (mean of all providers)</option>
+      </select></div>
+    <div class="small" id="ceilInfo"></div>
+  </div>
+  <div class="row">
+    <div style="flex:1;min-width:320px"><h2 style="font-size:13px;margin-bottom:6px">No ceiling &nbsp;<span class="small">list = cost &times; (1+m)</span></h2><div id="grid1" class="heat"></div></div>
+    <div style="flex:1;min-width:320px"><h2 style="font-size:13px;margin-bottom:6px">With ceiling &nbsp;<span class="small" id="ceilLab"></span></h2><div id="grid2" class="heat"></div></div>
+  </div>
+  <div class="legend" style="margin-top:8px"><span class="small">Margin scale</span>
+    <span><i class="dot" style="background:hsl(0,68%,52%)"></i>&le;0%</span>
+    <span><i class="dot" style="background:hsl(34,68%,50%)"></i>~10%</span>
+    <span><i class="dot" style="background:hsl(69,68%,48%)"></i>~20%</span>
+    <span><i class="dot" style="background:hsl(120,68%,46%)"></i>&ge;50%</span></div>
+
+  <h2 style="margin-top:18px">Sensitivity — Model 3 subscription margin by consumption &times; subscription price</h2>
+  <p class="note">Consumption (tokens per user per month) across, subscription price ($/user/mo) down, at the current discount and free bundle. Margin = (subscription fee + overage revenue &minus; token cost) / revenue. Green is high margin, red is a loss. Read it as the case against a subscription: at low consumption the margin looks high only because the customer is overpaying for very few tokens, and where usage fills the free bundle but the fee is low the margin turns deeply negative because Akamai still pays for those tokens. The margin only settles toward the discount at high consumption. That instability, versus the flat predictable margin of Model 1, is why we do not launch the subscription.</p>
+  <div id="grid3" class="heat" style="max-width:660px"></div>
+</div>
+
+<p class="small">Sources: OpenRouter model endpoints API (pricing, uptime) and frontend stats (p50 latency, throughput), retrieved 20 Aug 2026. Akamai figures are computed live from the parameters above and are not published rates.</p>
+</div>
+</div>
+
+<div id="tab-fc" class="hide">
+<div class="wrap">
+  <div class="card">
+    <div class="row">
+      <div style="flex:1;min-width:260px">
+        <h2>Forecast inputs</h2>
+        <div class="fcgrid">
+          <div class="ctrl"><label>Starting customers</label><input type="number" id="fUsers" step="10"></div>
+          <div class="ctrl"><label>Customer growth (%/mo)</label><input type="number" id="fGrow" step="1"></div>
+          <div class="ctrl"><label>Tokens/user (M/mo, start)</label><input type="number" id="fTpu" step="1"></div>
+          <div class="ctrl"><label>Usage ramp (%/mo)</label><input type="number" id="fRamp" step="1"></div>
+          <div class="ctrl"><label>Price on model</label><select id="fPricing"><option value="1">Model 1 (capped)</option><option value="2">Model 2 (uncapped)</option><option value="3">Model 3 (subscription)</option></select></div>
+        </div>
+      </div>
+      <div style="flex:1;min-width:260px">
+        <h2>Model consumption split (% of tokens) <span class="small" id="splitSum"></span></h2>
+        <div id="splitBox"></div>
+      </div>
+    </div>
+    <h2 style="margin-top:14px">Revenue projection</h2>
+    <div class="row" id="fcKpis" style="margin-bottom:12px"></div>
+    <svg id="fcBar" viewBox="0 0 720 220" style="max-width:720px"></svg>
+    <p class="note" id="fcnote"></p>
+  </div>
+  <div class="card">
+    <h2>Yearly summary</h2>
+    <table id="fcYear" class="dtable"></table>
+  </div>
+  <div class="card">
+    <h2>Monthly ramp (36 months)</h2>
+    <p class="note">The month-by-month build behind the yearly totals. Customers grow at the monthly growth rate, tokens per user ramp at the usage rate, and revenue uses the selected pricing model and consumption split.</p>
+    <div style="max-height:440px;overflow:auto"><table id="fcMonth" class="dtable"></table></div>
+  </div>
+</div>
+</div>
+
+<div id="tab-rec" class="hide">
+<div class="wrap">
+  <div class="card">
+    <h2>Recommendation</h2>
+    <p>Launch on Model 1 as the single pricing model. Embed the markup in one clean all-in rate and cap each token type at the cost-basis partner's retail price, so Akamai never lists above what a customer could pay the partner directly. Do not launch Model 2 (uncapped) or Model 3 (subscription). One usage-based rate is the simplest thing to sell and it is fair at every usage level, from the smallest developer to the largest account.</p>
+    <p class="note">The goal is adoption. Margin is a floor to protect, not the number to maximise. Revenue follows from developers, token growth and retention, so it is treated as an output rather than a target.</p>
+  </div>
+
+  <div class="card">
+    <h2>Three key reasons</h2>
+
+    <p style="font-weight:bold;color:var(--navy);margin-bottom:2px">1. Willingness to pay and market standing</p>
+    <p>Akamai resells a white-labelled model that performs the same as the partner. Without a hard inference-path differentiator such as edge security, a web application firewall, prompt-injection defense or PII handling, buyers will not pay a premium over the partner or the discount aggregators. Model 1 caps each token type at the partner's retail and passes the negotiated discount through, so Akamai sits at or below the field. The positioning maps show where Akamai lands for each model, and under Model 1 it stays left of the partner on price at equal performance.</p>
+
+    <p style="font-weight:bold;color:var(--navy);margin:12px 0 2px">2. Revenue and margin hold together</p>
+    <p>Model 1 earns a unit margin of markup divided by one plus markup. At the current markup of <b id="recMk"></b> that is <b id="recMg"></b>, and it does not move with the discount. A deeper partner discount therefore lowers the customer price and helps adoption without eroding margin. The forecast panel on the other tab shows the adoption ramp reaching an exit run-rate in the tens of millions by year 3, with EBITDA turning positive in year 2 on the default assumptions.</p>
+
+    <p style="font-weight:bold;color:var(--navy);margin:12px 0 2px">3. Brand, trust and simplicity</p>
+    <p>A single all-in card price with the markup embedded reads as simple and honest, with no separate fee line to defend. Capping at the partner's retail signals fair pricing to technical buyers who can check the market in one click. The durable advantages are enterprise trust, an integrated cloud with data locality, one bill and no egress charges, and a global day-one launch. These earn the customer's choice rather than a per-token premium.</p>
+  </div>
+
+  <div class="card">
+    <h2>Why not the subscription or the uncapped rate</h2>
+    <p><b>Model 3, subscription. Not recommended.</b> A subscription only creates value when usage is high, because the effective price is the fee divided by the tokens actually used. A light user who consumes a fraction of the bundle pays a very high price per million tokens, so low-usage cohorts overpay and churn or never convert. Worked example: a $20 fee over 10M tokens used is $2.00 per 1M, against $0.20 per 1M if the full 100M bundle were consumed, a tenfold penalty on the light user. The subscription margin heatmap on the interactive tab shows the same instability from Akamai's side, swinging from deeply negative where a low fee has to cover a filled free bundle to very high where the customer is overpaying. A single usage-based rate avoids all of this and scales cleanly across every cohort.</p>
+    <p><b>Model 2, uncapped. Not recommended.</b> Without a ceiling it can list above the partner once the markup passes discount divided by one minus discount, which undercuts the adoption thesis. Revisit only if a hard differentiator ever justifies a premium.</p>
+  </div>
+</div>
+</div>
+
+<script>
+const DATA = {"generated": "20 Aug 2026", "main": ["CoreWeave", "Together", "Fireworks", "Baseten", "DeepInfra", "Cloudflare", "DigitalOcean"], "models": [{"label": "DeepSeek-V4-Flash-0731", "slug": "deepseek/deepseek-v4-flash-0731", "url": "https://openrouter.ai/deepseek/deepseek-v4-flash-0731/providers", "basis": "Baseten", "basisProvider": "Baseten", "retail": {"in": 0.13, "cached": 0.028, "out": 0.26}, "perf": {"lat": 0.67, "tps": 45}, "market": {"in": 0.157, "cached": 0.0322, "out": 0.3732, "medIn": 0.14, "medCached": 0.028, "medOut": 0.28, "n": 30}, "providers": [{"name": "OpenInference", "in": 0.065, "cached": 0.014, "out": 0.14, "uptime": 96.4, "lat": 4.79, "tps": 9}, {"name": "Sail Research", "in": 0.065, "cached": 0.02, "out": 0.18, "uptime": 98.61, "lat": 1.91, "tps": 14}, {"name": "Relace", "in": 0.07, "cached": 0.014, "out": 0.14, "uptime": 99.64, "lat": 0.61, "tps": 33}, {"name": "Decart", "in": 0.0765, "cached": 0.0153, "out": 0.153, "uptime": 87.87, "lat": 0.8, "tps": 41}, {"name": "StreamLake", "in": 0.0784, "cached": 0.0157, "out": 0.1568, "uptime": 97.07, "lat": 1.96, "tps": 22}, {"name": "Baidu Qianfan", "in": 0.0798, "cached": 0.016, "out": 0.1596, "uptime": 99.59, "lat": 0.86, "tps": 110}, {"name": "DeepInfra", "in": 0.08, "cached": 0.016, "out": 0.18, "uptime": 98.6, "lat": 0.68, "tps": 41}, {"name": "DigitalOcean", "in": 0.08, "cached": 0.0252, "out": 0.252, "uptime": 98.12, "lat": 0.65, "tps": 24}, {"name": "GMICloud", "in": 0.112, "cached": 0.0224, "out": 0.224, "uptime": 99.56, "lat": 2.47, "tps": 44}, {"name": "Baseten", "in": 0.13, "cached": 0.028, "out": 0.26, "uptime": 98.2, "lat": 0.67, "tps": 45}, {"name": "CoreWeave", "in": 0.13, "cached": 0.07, "out": 0.28, "uptime": 99.96, "lat": 0.68, "tps": 109}, {"name": "Inceptron", "in": 0.13, "cached": 0.03, "out": 0.28, "uptime": 99.59, "lat": 0.68, "tps": 64}, {"name": "Morph", "in": 0.139, "cached": 0.07, "out": 0.278, "uptime": 99.13, "lat": 1.29, "tps": 24}, {"name": "Fireworks", "in": 0.14, "cached": 0.028, "out": 0.28, "uptime": 96.94, "lat": 0.67, "tps": 52}, {"name": "AkashML", "in": 0.14, "cached": 0.02, "out": 0.28, "uptime": 97.06, "lat": 0.83, "tps": 38}, {"name": "Novita", "in": 0.14, "cached": 0.028, "out": 0.28, "uptime": 99.92, "lat": null, "tps": null}, {"name": "Together", "in": 0.14, "cached": 0.03, "out": 0.28, "uptime": 96.88, "lat": 0.77, "tps": 48}, {"name": "Parasail", "in": 0.14, "cached": 0.07, "out": 0.28, "uptime": 98.27, "lat": 0.8, "tps": 55}, {"name": "AtlasCloud", "in": 0.14, "cached": 0.028, "out": 0.28, "uptime": 99.35, "lat": 1.26, "tps": 67}, {"name": "SiliconFlow", "in": 0.14, "cached": 0.028, "out": 0.28, "uptime": 98.73, "lat": 1.86, "tps": 56}, {"name": "Ambient", "in": 0.14, "cached": 0.028, "out": 0.28, "uptime": 96.55, "lat": 0.74, "tps": 60}, {"name": "Mancer", "in": 0.145, "cached": 0.0, "out": 0.45, "uptime": 94.21, "lat": 1.02, "tps": 41}, {"name": "Venice", "in": 0.175, "cached": 0.035, "out": 0.35, "uptime": 97.72, "lat": 0.95, "tps": 31}, {"name": "Io Net", "in": 0.189, "cached": 0.097, "out": 0.42, "uptime": 98.91, "lat": null, "tps": null}, {"name": "Phala", "in": 0.2, "cached": 0.07, "out": 0.4, "uptime": 97.75, "lat": 0.76, "tps": 41}, {"name": "DeepSeek", "in": 0.22, "cached": 0.007, "out": 0.66, "uptime": 99.92, "lat": 0.94, "tps": 68}, {"name": "Reka AI", "in": 0.22, "cached": 0.007, "out": 0.66, "uptime": 93.82, "lat": 1.25, "tps": 66}, {"name": "Wafer Fast", "in": 0.28, "cached": 0.07, "out": 0.56, "uptime": 98.65, "lat": 1.28, "tps": 89}, {"name": "Cloudflare", "in": 0.44, "cached": 0.014, "out": 1.32, "uptime": 99.62, "lat": 0.68, "tps": 69}, {"name": "Alibaba Cloud Int.", "in": 0.484, "cached": 0.0484, "out": 1.452, "uptime": 96.59, "lat": 1.38, "tps": 47}]}, {"label": "DeepSeek-V4-Flash-0423", "slug": "deepseek/deepseek-v4-flash", "url": "https://openrouter.ai/deepseek/deepseek-v4-flash/providers", "basis": "DeepInfra", "basisProvider": "DeepInfra", "retail": {"in": 0.09, "cached": 0.018, "out": 0.18}, "perf": {"lat": 0.73, "tps": 31}, "market": {"in": 0.1507, "cached": 0.0285, "out": 0.3575, "medIn": 0.139, "medCached": 0.0246, "medOut": 0.28, "n": 18}, "providers": [{"name": "DigitalOcean", "in": 0.0679, "cached": 0.0168, "out": 0.168, "uptime": 99.0, "lat": 1.76, "tps": 6}, {"name": "StreamLake", "in": 0.0868, "cached": 0.0174, "out": 0.1736, "uptime": 99.14, "lat": 3.76, "tps": 33}, {"name": "Baidu Qianfan", "in": 0.0882, "cached": 0.0176, "out": 0.1764, "uptime": 95.36, "lat": 0.73, "tps": 83}, {"name": "DeepInfra", "in": 0.09, "cached": 0.018, "out": 0.18, "uptime": 99.55, "lat": 0.73, "tps": 31}, {"name": "Sail Research", "in": 0.09, "cached": 0.02, "out": 0.18, "uptime": 99.7, "lat": 0.73, "tps": 26}, {"name": "GMICloud", "in": 0.112, "cached": 0.0224, "out": 0.224, "uptime": 99.55, "lat": 2.37, "tps": 52}, {"name": "SiliconFlow", "in": 0.13, "cached": 0.028, "out": 0.28, "uptime": 99.12, "lat": 1.52, "tps": 41}, {"name": "Alibaba Cloud Int.", "in": 0.134, "cached": 0.0268, "out": 0.268, "uptime": 99.81, "lat": 0.82, "tps": 77}, {"name": "Venice", "in": 0.138, "cached": 0.028, "out": 0.275, "uptime": 99.74, "lat": 1.64, "tps": 32}, {"name": "Parasail", "in": 0.14, "cached": 0.07, "out": 0.28, "uptime": 99.16, "lat": 0.66, "tps": 55}, {"name": "Novita", "in": 0.14, "cached": 0.028, "out": 0.28, "uptime": 99.85, "lat": null, "tps": null}, {"name": "AtlasCloud", "in": 0.14, "cached": 0.028, "out": 0.28, "uptime": 99.88, "lat": 0.97, "tps": 44}, {"name": "CoreWeave", "in": 0.14, "cached": 0.07, "out": 0.28, "uptime": 99.32, "lat": 0.55, "tps": 38}, {"name": "Mancer", "in": 0.145, "cached": 0.0, "out": 0.45, "uptime": 98.58, "lat": 1.06, "tps": 34}, {"name": "Phala", "in": 0.2, "cached": 0.07, "out": 0.4, "uptime": 98.36, "lat": 4.18, "tps": 7}, {"name": "Azure (US)", "in": 0.21, "cached": 0.031, "out": 0.56, "uptime": 84.98, "lat": 2.19, "tps": 27}, {"name": "DeepSeek", "in": 0.22, "cached": 0.007, "out": 0.66, "uptime": 99.9, "lat": 0.89, "tps": 77}, {"name": "Cloudflare", "in": 0.44, "cached": 0.014, "out": 1.32, "uptime": 99.99, "lat": 0.82, "tps": 56}]}, {"label": "GLM-5.2", "slug": "z-ai/glm-5.2", "url": "https://openrouter.ai/z-ai/glm-5.2/providers", "basis": "Baseten", "basisProvider": "Baseten", "retail": {"in": 1.4, "cached": 0.14, "out": 4.4}, "perf": {"lat": 2.02, "tps": 51}, "market": {"in": 1.2414, "cached": 0.2028, "out": 3.9699, "medIn": 1.26, "medCached": 0.21, "medOut": 3.96, "n": 31}, "providers": [{"name": "Sail Research", "in": 0.5, "cached": 0.115, "out": 3.15, "uptime": 99.53, "lat": 1.64, "tps": 28}, {"name": "Ambient", "in": 0.6, "cached": 0.15, "out": 2.0, "uptime": 87.14, "lat": 1.52, "tps": 51}, {"name": "Decart", "in": 0.684, "cached": 0.114, "out": 2.28, "uptime": 99.31, "lat": 1.29, "tps": 61}, {"name": "DigitalOcean", "in": 0.7, "cached": 0.105, "out": 2.2, "uptime": 99.23, "lat": 0.89, "tps": 48}, {"name": "StreamLake", "in": 0.7336, "cached": 0.1362, "out": 2.3056, "uptime": 99.83, "lat": 1.42, "tps": 45}, {"name": "Novita", "in": 0.7406, "cached": 0.1375, "out": 2.3276, "uptime": 99.54, "lat": null, "tps": null}, {"name": "GMICloud", "in": 0.742, "cached": 0.1378, "out": 2.332, "uptime": 99.39, "lat": 1.17, "tps": 44}, {"name": "DeepInfra", "in": 0.75, "cached": 0.14, "out": 2.4, "uptime": 99.63, "lat": 1.46, "tps": 35}, {"name": "Inceptron", "in": 0.75, "cached": 0.17, "out": 2.9, "uptime": 97.01, "lat": 0.68, "tps": 81}, {"name": "CoreWeave", "in": 0.76, "cached": 0.14, "out": 2.42, "uptime": 99.83, "lat": 0.56, "tps": 84}, {"name": "Alibaba Cloud Int.", "in": 0.966, "cached": 0.1932, "out": 3.036, "uptime": 99.38, "lat": 1.65, "tps": 48}, {"name": "Morph", "in": 1.1, "cached": 0.22, "out": 4.1, "uptime": 98.16, "lat": 2.59, "tps": 26}, {"name": "Baidu Qianfan", "in": 1.176, "cached": 0.2184, "out": 3.696, "uptime": 99.8, "lat": 1.93, "tps": 59}, {"name": "SiliconFlow", "in": 1.19, "cached": 0.221, "out": 3.74, "uptime": 99.5, "lat": 2.03, "tps": 46}, {"name": "Phala", "in": 1.26, "cached": 0.22, "out": 3.0, "uptime": 99.42, "lat": 1.66, "tps": 54}, {"name": "Wafer", "in": 1.26, "cached": 0.234, "out": 3.96, "uptime": 99.67, "lat": 4.36, "tps": 57}, {"name": "AtlasCloud", "in": 1.26, "cached": 0.234, "out": 3.96, "uptime": 99.59, "lat": 1.32, "tps": 42}, {"name": "Z.ai", "in": 1.4, "cached": 0.26, "out": 4.4, "uptime": 99.68, "lat": 4.13, "tps": 43}, {"name": "Fireworks", "in": 1.4, "cached": 0.14, "out": 4.4, "uptime": 98.8, "lat": 1.81, "tps": 37}, {"name": "Cloudflare", "in": 1.4, "cached": 0.26, "out": 4.4, "uptime": 98.43, "lat": 2.5, "tps": 59}, {"name": "Friendli", "in": 1.4, "cached": 0.26, "out": 4.4, "uptime": 99.59, "lat": 0.62, "tps": 100}, {"name": "Parasail", "in": 1.4, "cached": 0.26, "out": 4.4, "uptime": 99.91, "lat": 0.97, "tps": 80}, {"name": "Venice", "in": 1.4, "cached": 0.26, "out": 4.4, "uptime": 98.39, "lat": 2.4, "tps": 46}, {"name": "Together", "in": 1.4, "cached": 0.26, "out": 4.4, "uptime": 93.87, "lat": 0.84, "tps": 44}, {"name": "Crusoe", "in": 1.4, "cached": 0.26, "out": 4.4, "uptime": 99.68, "lat": 0.81, "tps": 60}, {"name": "Baseten", "in": 1.4, "cached": 0.14, "out": 4.4, "uptime": 99.36, "lat": 2.02, "tps": 51}, {"name": "Fireworks Fast", "in": 2.1, "cached": 0.21, "out": 6.6, "uptime": 96.74, "lat": 1.37, "tps": 74.5}, {"name": "Cloudflare Fast", "in": 2.1, "cached": 0.21, "out": 6.6, "uptime": 99.85, "lat": 1.77, "tps": 69}, {"name": "Baseten Fast", "in": 2.1, "cached": 0.21, "out": 6.6, "uptime": 99.09, "lat": 2.11, "tps": 78}, {"name": "Fireworks Fast (US)", "in": 2.1, "cached": 0.21, "out": 6.6, "uptime": 96.77, "lat": 0.77, "tps": 95}, {"name": "Alibaba Fast", "in": 2.31, "cached": 0.462, "out": 7.26, "uptime": 99.9, "lat": 1.41, "tps": 36}]}, {"label": "NVIDIA Nemotron 3 Ultra", "slug": "nvidia/nemotron-3-ultra-550b-a55b", "url": "https://openrouter.ai/nvidia/nemotron-3-ultra-550b-a55b/providers", "basis": "Baseten", "basisProvider": "Baseten", "retail": {"in": 0.6, "cached": 0.12, "out": 2.4}, "perf": {"lat": 22.22, "tps": 29}, "market": {"in": 0.5813, "cached": 0.1519, "out": 2.8312, "medIn": 0.6, "medCached": 0.1537, "medOut": 2.7625, "n": 4}, "providers": [{"name": "DeepInfra", "in": 0.5, "cached": 0.1, "out": 2.2, "uptime": 88.22, "lat": 1.19, "tps": 34}, {"name": "Baseten", "in": 0.6, "cached": 0.12, "out": 2.4, "uptime": 98.23, "lat": 22.22, "tps": 29}, {"name": "Together", "in": 0.6, "cached": 0.2, "out": 3.6, "uptime": 98.5, "lat": 0.43, "tps": 121}, {"name": "Venice", "in": 0.625, "cached": 0.1875, "out": 3.125, "uptime": 76.83, "lat": 6.51, "tps": 50}]}, {"label": "DeepSeek V4 Pro", "slug": "deepseek/deepseek-v4-pro", "url": "https://openrouter.ai/deepseek/deepseek-v4-pro/providers", "basis": "Baseten", "basisProvider": "Baseten", "retail": {"in": 1.74, "cached": 0.145, "out": 3.48}, "perf": {"lat": 0.41, "tps": 61}, "market": {"in": 1.4233, "cached": 0.1361, "out": 2.9648, "medIn": 1.5508, "medCached": 0.135, "medOut": 3.184, "n": 18}, "providers": [{"name": "DeepSeek", "in": 0.66, "cached": 0.022, "out": 1.98, "uptime": 99.84, "lat": 1.02, "tps": 34}, {"name": "DigitalOcean", "in": 0.87, "cached": 0.174, "out": 1.74, "uptime": 0, "lat": null, "tps": null}, {"name": "StreamLake", "in": 1.044, "cached": 0.087, "out": 2.088, "uptime": 97.84, "lat": 2.04, "tps": 39}, {"name": "GMICloud", "in": 1.056, "cached": 0.0352, "out": 3.168, "uptime": 94.32, "lat": 3.03, "tps": 36}, {"name": "Ionstream", "in": 1.131, "cached": 0.094, "out": 2.262, "uptime": 93.95, "lat": 2.47, "tps": 28}, {"name": "CoreWeave", "in": 1.15, "cached": 0.2, "out": 2.55, "uptime": 96.85, "lat": 0.45, "tps": 62}, {"name": "DeepInfra", "in": 1.3, "cached": 0.1, "out": 2.6, "uptime": 99.35, "lat": 0.87, "tps": 34}, {"name": "Alibaba Cloud Int.", "in": 1.416, "cached": 0.118, "out": 2.832, "uptime": 96.32, "lat": 1.48, "tps": 52}, {"name": "SiliconFlow", "in": 1.5016, "cached": 0.135, "out": 3.135, "uptime": 97.96, "lat": 2.11, "tps": 38}, {"name": "Novita", "in": 1.6, "cached": 0.135, "out": 3.2, "uptime": 99.5, "lat": null, "tps": null}, {"name": "Venice", "in": 1.65, "cached": 0.33, "out": 3.301, "uptime": 85.53, "lat": 1.78, "tps": 52}, {"name": "AtlasCloud", "in": 1.68, "cached": 0.13, "out": 3.38, "uptime": 91.09, "lat": 1.42, "tps": 42}, {"name": "Baidu Qianfan", "in": 1.69, "cached": 0.14, "out": 3.38, "uptime": 97.38, "lat": 1.2, "tps": 49}, {"name": "Parasail", "in": 1.74, "cached": 0.1, "out": 3.48, "uptime": 90.94, "lat": 0.82, "tps": 54}, {"name": "Baseten", "in": 1.74, "cached": 0.145, "out": 3.48, "uptime": 99.9, "lat": 0.41, "tps": 61}, {"name": "Together", "in": 1.74, "cached": 0.2, "out": 3.48, "uptime": 96.98, "lat": 0.56, "tps": 54}, {"name": "Fireworks", "in": 1.74, "cached": 0.145, "out": 3.48, "uptime": 0, "lat": 1.84, "tps": 59}, {"name": "Azure (US)", "in": 1.91, "cached": 0.16, "out": 3.83, "uptime": 91.41, "lat": 1.5, "tps": 49}]}, {"label": "Kimi K3", "slug": "moonshotai/kimi-k3", "url": "https://openrouter.ai/moonshotai/kimi-k3/providers", "basis": "Baseten", "basisProvider": "Baseten", "retail": {"in": 3.0, "cached": 0.3, "out": 15.0}, "perf": {"lat": 1.74, "tps": 64}, "market": {"in": 3.1714, "cached": 0.4057, "out": 15.3214, "medIn": 3.0, "medCached": 0.3, "medOut": 15.0, "n": 14}, "providers": [{"name": "Sail Research", "in": 2.6, "cached": 0.29, "out": 13.0, "uptime": 97.92, "lat": 2.64, "tps": 32}, {"name": "Morph", "in": 2.8, "cached": 0.29, "out": 14.0, "uptime": 83.87, "lat": 3.97, "tps": 29}, {"name": "DigitalOcean", "in": 2.85, "cached": 0.285, "out": 14.25, "uptime": 98.96, "lat": 2.03, "tps": 28}, {"name": "DeepInfra", "in": 2.85, "cached": 0.285, "out": 14.25, "uptime": 88.65, "lat": 2.39, "tps": 11}, {"name": "Fireworks", "in": 3.0, "cached": 0.3, "out": 15.0, "uptime": 99.0, "lat": 3.1, "tps": 36}, {"name": "Chutes", "in": 3.0, "cached": 0.3, "out": 15.0, "uptime": 98.05, "lat": 1.58, "tps": 30}, {"name": "Together", "in": 3.0, "cached": 0.3, "out": 15.0, "uptime": 98.59, "lat": 2.62, "tps": 41}, {"name": "Moonshot AI", "in": 3.0, "cached": 0.3, "out": 15.0, "uptime": 99.53, "lat": 5.07, "tps": 21}, {"name": "Wafer", "in": 3.0, "cached": 0.3, "out": 15.0, "uptime": 97.65, "lat": 3.23, "tps": 46}, {"name": "Modal", "in": 3.0, "cached": 0.3, "out": 15.0, "uptime": 99.49, "lat": 2.23, "tps": 73}, {"name": "Baseten", "in": 3.0, "cached": 0.3, "out": 15.0, "uptime": 99.61, "lat": 1.74, "tps": 64}, {"name": "Phala", "in": 3.0, "cached": 1.5, "out": 15.0, "uptime": 92.25, "lat": 3.59, "tps": 29}, {"name": "Fireworks (US)", "in": 3.3, "cached": 0.33, "out": 16.5, "uptime": 96.08, "lat": 2.0, "tps": 56.5}, {"name": "Morph Fast", "in": 6.0, "cached": 0.6, "out": 22.5, "uptime": 69.95, "lat": 2.46, "tps": 25}]}]};
+const P = {d:30,m:20,sub:29,free:40,tpu:25,mi:60,mc:20,mo:20,model:0};
+let SEL = new Set();  // provider names selected for the maps (reset per model)
+let MAPBASIS = '0';   // positioning basis: model index as string, or 'blend'
+const F = {users:200,grow:15,tpu:25,ramp:5,pricing:'1'};
+let SPLIT = [30,8,24,8,18,12];  // % per model, order matches DATA.models
+let CEIL='baseten';  // ceiling basis for the right sensitivity grid
+
+const $=id=>document.getElementById(id);
+const money=v=>'$'+(v>=100?v.toFixed(0):v>=10?v.toFixed(2):v.toFixed(4));
+const M$=v=>'$'+(v/1e6).toFixed(2)+'M';
+const fmtTok=M=>M>=1e6?(M/1e6).toFixed(2)+'T':M>=1e3?(M/1e3).toFixed(1)+'B':M.toFixed(0)+'M';
+const D$=v=>v>=1e6?'$'+(v/1e6).toFixed(2)+'M':'$'+Math.round(v).toLocaleString();
+const mix=()=>({i:P.mi/100,c:P.mc/100,o:P.mo/100});
+function blendO(o){const x=mix();return x.i*o.in+x.c*o.cached+x.o*o.out;}
+function costO(r){return {in:r.in*(1-P.d/100),cached:r.cached*(1-P.d/100),out:r.out*(1-P.d/100)};}
+function m1O(r){const c=costO(r),k=1+P.m/100;return {in:Math.min(c.in*k,r.in),cached:Math.min(c.cached*k,r.cached),out:Math.min(c.out*k,r.out)};}
+function m2O(r){const c=costO(r),k=1+P.m/100;return {in:c.in*k,cached:c.cached*k,out:c.out*k};}
+function m3perM(r,U){const rb=blendO(r);const ov=Math.max(0,U-P.free);return U>0?(P.sub+ov*rb)/U:NaN;}
+
+// ---------- init controls
+function initModelSelect(){const s=$('model');
+  const ob=document.createElement('option');ob.value='blend';ob.textContent='Blended (all 6 models)';s.appendChild(ob);
+  DATA.models.forEach((m,i)=>{const o=document.createElement('option');o.value=i;o.textContent=m.label;s.appendChild(o);});}
+function basisRetail(){
+  if(P.model==='blend'){
+    const w=SPLIT.map(s=>s/100);let inp=0,ca=0,ou=0,mi=0,mc=0,mo=0,mdi=0,mdc=0,mdo=0,wa=0;
+    DATA.models.forEach((m,i)=>{const wi=w[i];if(wi<=0)return;wa+=wi;
+      inp+=wi*m.retail.in;ca+=wi*m.retail.cached;ou+=wi*m.retail.out;
+      mi+=wi*m.market.in;mc+=wi*m.market.cached;mo+=wi*m.market.out;
+      mdi+=wi*m.market.medIn;mdc+=wi*m.market.medCached;mdo+=wi*m.market.medOut;});
+    const n=wa>0?wa:1;
+    return {retail:{in:inp/n,cached:ca/n,out:ou/n},
+      market:{in:mi/n,cached:mc/n,out:mo/n,medIn:mdi/n,medCached:mdc/n,medOut:mdo/n},
+      label:'Blended (6 models)',basisProvider:'the 6-model blend',blend:true};
+  }
+  const M=DATA.models[P.model];
+  return {retail:M.retail,market:M.market,label:M.label,basisProvider:M.basisProvider,blend:false};}
+function bindRange(id,key,fmt){const el=$(id);el.value=P[key];$(id+'V').textContent=fmt(P[key]);el.addEventListener('input',()=>{P[key]=+el.value;$(id+'V').textContent=fmt(P[key]);render();});}
+function bindNum(id,key){const el=$(id);el.value=P[key];el.addEventListener('input',()=>{P[key]=+el.value||0;render();});}
+
+// ---------- price table
+function renderPrice(){
+  const B=basisRetail();const r=B.retail;const c=costO(r),a1=m1O(r),a2=m2O(r);
+  $('mlab').textContent=B.label;$('basisLab').textContent=B.basisProvider;
+  const rows=[['Component','Partner retail','Cost (retail×(1−d))','M1 capped','M2 no-cap'],
+    ['Input',r.in,c.in,a1.in,a2.in],['Cached / shared',r.cached,c.cached,a1.cached,a2.cached],
+    ['Output',r.out,c.out,a1.out,a2.out],
+    ['Blended $/1M',blendO(r),blendO(c),blendO(a1),blendO(a2)]];
+  let h='';rows.forEach((row,ri)=>{h+='<tr>';row.forEach((v,ci)=>{
+    if(ri===0){h+='<th class="'+(ci===0?'l':'')+'">'+v+'</th>';}
+    else if(ci===0){h+='<td class="l"><b>'+v+'</b></td>';}
+    else{const cls=(ci>=3)?'aka':'';h+='<td class="'+cls+'">'+money(v)+'</td>';}
+  });h+='</tr>';});
+  $('priceTbl').innerHTML=h;
+  const m3=m3perM(r,P.tpu);
+  $('capnote').innerHTML='Model 3 subscription effective at '+P.tpu+'M tok/user: <b class="aka">'+money(m3)+'/1M</b> '
+    +'( $'+P.sub+' + '+Math.max(0,P.tpu-P.free)+'M overage × '+money(blendO(r))+' ). '
+    +'M1=M2 while markup ≤ d/(1−d) = '+(P.d/(100-P.d)*100).toFixed(1)+'%.'
+    +(B.blend?' Blended across the 6 models by the consumption split set on the Forecast tab.':'');
+  const s=P.mi+P.mc+P.mo;$('mixnote').innerHTML=(s!==100?'<span class="sumbad">Mix sums to '+s+'%, should be 100%.</span>':'Mix sums to 100%.');
+  // Model 3 breakdown tables
+  const orate=blendO(r), ci=(P.mi/100)*r.in, cc=(P.mc/100)*r.cached, co=(P.mo/100)*r.out;
+  const ovTok=Math.max(0,P.tpu-P.free), ovChg=ovTok*orate, bill=P.sub+ovChg, eff=P.tpu>0?bill/P.tpu:NaN;
+  let m3h='<h2 style="font-size:13px;margin:2px 0 4px">Model 3 subscription breakdown</h2>'
+    +'<p class="small">The overage rate is the partner retail blended by your token mix, the same as the Blended $/1M retail row above. Overage tokens (usage above the free bundle) bill at this rate.</p>'
+    +'<table class="dtable"><tr><th class="l">Overage rate build</th><th>Partner retail $/1M</th><th>Mix</th><th>Contribution</th></tr>'
+    +'<tr><td class="l">Input</td><td>'+money(r.in)+'</td><td>'+P.mi+'%</td><td>'+money(ci)+'</td></tr>'
+    +'<tr><td class="l">Cached / shared</td><td>'+money(r.cached)+'</td><td>'+P.mc+'%</td><td>'+money(cc)+'</td></tr>'
+    +'<tr><td class="l">Output</td><td>'+money(r.out)+'</td><td>'+P.mo+'%</td><td>'+money(co)+'</td></tr>'
+    +'<tr><td class="l"><b>Overage rate (blended retail)</b></td><td></td><td></td><td class="aka"><b>'+money(orate)+'</b></td></tr></table>'
+    +'<table class="dtable" style="margin-top:8px"><tr><th class="l">Model 3 effective price</th><th>Value</th></tr>'
+    +'<tr><td class="l">Subscription fee</td><td>$'+P.sub+' /user/mo</td></tr>'
+    +'<tr><td class="l">Free bundle</td><td>'+P.free+' M tokens/mo</td></tr>'
+    +'<tr><td class="l">Assumed usage</td><td>'+P.tpu+' M tokens/mo</td></tr>'
+    +'<tr><td class="l">Overage tokens (usage − free, min 0)</td><td>'+ovTok+' M</td></tr>'
+    +'<tr><td class="l">Overage charge (overage × rate)</td><td>'+D$(ovChg)+'</td></tr>'
+    +'<tr><td class="l"><b>Monthly bill (fee + overage)</b></td><td><b>'+D$(bill)+'</b></td></tr>'
+    +'<tr><td class="l"><b>Effective price (bill ÷ usage)</b></td><td class="aka"><b>'+money(eff)+'/1M</b></td></tr></table>';
+  $('m3calc').innerHTML=m3h;
+}
+
+// ---------- positioning basis + scatter
+function provPrice(p){return blendO({in:p.in,cached:p.cached,out:p.out});}
+function mapData(){
+  if(MAPBASIS!=='blend'){
+    const M=DATA.models[+MAPBASIS];const r=M.retail;
+    return {provs:M.providers.map(p=>({name:p.name,x:provPrice(p),lat:p.lat,tps:p.tps,pin:p.in,pca:p.cached,pout:p.out})),
+      akas:[{n:'M1',x:blendO(m1O(r))},{n:'M2',x:blendO(m2O(r))},{n:'M3',x:m3perM(r,P.tpu)}],
+      akaPerf:{lat:M.perf.lat,tps:M.perf.tps},single:true};
+  }
+  const w=SPLIT.map(s=>s/100);const pm={};
+  DATA.models.forEach((M,i)=>{const wi=w[i];if(wi<=0)return;
+    M.providers.forEach(p=>{const k=p.name.toLowerCase();
+      const e=pm[k]||(pm[k]={name:p.name,wx:0,xs:0,wl:0,ls:0,wt:0,ts:0,is:0,cs:0,os:0});
+      e.wx+=wi;e.xs+=wi*provPrice(p);e.is+=wi*p.in;e.cs+=wi*p.cached;e.os+=wi*p.out;
+      if(p.lat!=null){e.wl+=wi;e.ls+=wi*p.lat;}if(p.tps!=null){e.wt+=wi;e.ts+=wi*p.tps;}});});
+  const provs=Object.values(pm).map(e=>({name:e.name,x:e.wx>0?e.xs/e.wx:null,
+    lat:e.wl>0?e.ls/e.wl:null,tps:e.wt>0?e.ts/e.wt:null,
+    pin:e.wx>0?e.is/e.wx:null,pca:e.wx>0?e.cs/e.wx:null,pout:e.wx>0?e.os/e.wx:null})).filter(p=>p.x!=null);
+  let wa=0,a1=0,a2=0,a3=0,wl=0,ls=0,wt=0,ts=0;
+  DATA.models.forEach((M,i)=>{const wi=w[i];if(wi<=0)return;wa+=wi;const r=M.retail;
+    a1+=wi*blendO(m1O(r));a2+=wi*blendO(m2O(r));a3+=wi*m3perM(r,P.tpu);
+    if(M.perf.lat!=null){wl+=wi;ls+=wi*M.perf.lat;}if(M.perf.tps!=null){wt+=wi;ts+=wi*M.perf.tps;}});
+  return {provs,akas:wa>0?[{n:'M1',x:a1/wa},{n:'M2',x:a2/wa},{n:'M3',x:a3/wa}]:[],
+    akaPerf:{lat:wl>0?ls/wl:null,tps:wt>0?ts/wt:null},single:false};
+}
+function scatter(svgId,accY,yLabel,quad){
+  const MD=mapData();const svg=$(svgId);
+  const W=980,H=560,ml=78,mr=28,mt=32,mb=58;
+  const provs=MD.provs.filter(p=>SEL.has(p.name))
+    .map(p=>({name:p.name,x:p.x,y:accY(p),pin:p.pin,pca:p.pca,pout:p.pout,lat:p.lat,tps:p.tps}))
+    .filter(p=>p.y!=null);
+  const ay=accY(MD.akaPerf);
+  const akas=MD.akas.filter(a=>isFinite(a.x));
+  const basisLabel=(MAPBASIS==='blend')?'blended, 6 models':DATA.models[+MAPBASIS].label;
+  const ptip=p=>{let t=p.name+'\nInput '+money(p.pin)+'   Cached '+money(p.pca)+'   Output '+money(p.pout)+'\nBlended '+money(p.x)+'/1M';
+    t+=(p.lat!=null)?('\nLatency '+p.lat+'s   Throughput '+p.tps+' TPS'):'\nNo measured performance';return t;};
+  const atip=a=>{let t='Akamai '+a.n+' ('+basisLabel+')\nBlended '+money(a.x)+'/1M';
+    t+=(ay!=null)?('\nat partner '+MD.akaPerf.lat+'s   '+MD.akaPerf.tps+' TPS'):'\npartner performance not measured';return t;};
+  const xs=provs.map(p=>p.x).concat(akas.map(a=>a.x));
+  const ys=provs.map(p=>p.y).concat(ay!=null?[ay]:[]);
+  if(!ys.length){svg.innerHTML='<text x="18" y="46" font-size="12" fill="#42505f">No OpenRouter performance for the selected providers on this model.</text>'+
+    '<text x="18" y="66" font-size="12" fill="#42505f">Select more providers, or this model has no measured latency / throughput yet.</text>';return;}
+  const xmin=Math.min(...xs),xmax=Math.max(...xs),ymin=Math.min(...ys),ymax=Math.max(...ys);
+  const px=(xmax-xmin)*0.12||xmax*0.1||1,py=(ymax-ymin)*0.12||ymax*0.1||1;
+  const X0=Math.max(0,xmin-px),X1=xmax+px,Y0=Math.max(0,ymin-py),Y1=ymax+py;
+  const sx=v=>ml+(v-X0)/(X1-X0)*(W-ml-mr);
+  const sy=v=>H-mb-(v-Y0)/(Y1-Y0)*(H-mt-mb);
+  const med=arr=>{const a=[...arr].sort((p,q)=>p-q);const n=a.length;return n%2?a[(n-1)/2]:(a[n/2-1]+a[n/2])/2;};
+  let s='';
+  s+=`<line x1="${ml}" y1="${H-mb}" x2="${W-mr}" y2="${H-mb}" stroke="#98a4b2"/>`;
+  s+=`<line x1="${ml}" y1="${mt}" x2="${ml}" y2="${H-mb}" stroke="#98a4b2"/>`;
+  if(provs.length){const mx=med(provs.map(p=>p.x)),my=med(provs.map(p=>p.y));
+    s+=`<line x1="${sx(mx)}" y1="${mt}" x2="${sx(mx)}" y2="${H-mb}" stroke="#c9d3de" stroke-dasharray="4 4"/>`;
+    s+=`<line x1="${ml}" y1="${sy(my)}" x2="${W-mr}" y2="${sy(my)}" stroke="#c9d3de" stroke-dasharray="4 4"/>`;
+    s+=`<text x="${ml+6}" y="${mt+12}" font-size="10" fill="#9aa6b3">${quad.tl}</text>`;
+    s+=`<text x="${W-mr-6}" y="${mt+12}" font-size="10" fill="#9aa6b3" text-anchor="end">${quad.tr}</text>`;
+    s+=`<text x="${ml+6}" y="${H-mb-6}" font-size="10" fill="#9aa6b3">${quad.bl}</text>`;
+    s+=`<text x="${W-mr-6}" y="${H-mb-6}" font-size="10" fill="#9aa6b3" text-anchor="end">${quad.br}</text>`;}
+  const xlab=(MAPBASIS==='blend')?'Blended price $/1M (all 6 models)':'$/1M tokens';
+  s+=`<text x="${(ml+W-mr)/2}" y="${H-8}" font-size="12" text-anchor="middle" fill="#42505f">${xlab}</text>`;
+  s+=`<text transform="translate(16,${(mt+H-mb)/2}) rotate(-90)" font-size="12" text-anchor="middle" fill="#42505f">${yLabel}</text>`;
+  [X0,(X0+X1)/2,X1].forEach(v=>{s+=`<text x="${sx(v)}" y="${H-mb+14}" font-size="9" fill="#8a95a2" text-anchor="middle">${money(v)}</text>`;});
+  [Y0,(Y0+Y1)/2,Y1].forEach(v=>{s+=`<text x="${ml-6}" y="${sy(v)+3}" font-size="9" fill="#8a95a2" text-anchor="end">${v.toFixed(v<10?2:0)}</text>`;});
+  // ---- label placement with de-collision, leader lines and white halo ----
+  const placed=[];
+  const within=b=>b.x0>=3&&b.x1<=W-3&&b.y0>=mt-1&&b.y1<=H-mb+13;
+  const hit=b=>placed.some(p=>!(b.x1<p.x0-1||b.x0>p.x1+1||b.y1<p.y0-1||b.y0>p.y1+1));
+  const cands=[[8,3,'start'],[0,-9,'middle'],[0,15,'middle'],[8,-9,'start'],[8,15,'start'],[-8,3,'end'],[-8,-9,'end'],[-8,15,'end']];
+  for(let k=1;k<=10;k++){cands.push([11,3+k*12,'start']);cands.push([11,3-k*12,'start']);cands.push([-11,3+k*12,'end']);cands.push([-11,3-k*12,'end']);}
+  const vcands=[[0,-11,'middle'],[0,18,'middle'],[0,-24,'middle'],[0,31,'middle'],[0,-37,'middle'],[0,44,'middle'],[0,-50,'middle'],[0,57,'middle'],[0,-63,'middle'],[0,70,'middle']];
+  function label(cx,cy,text,color,bold,vert){
+    const cw=bold?6.6:5.6,fh=bold?12:11,w=text.length*cw;let ch=null;const list=vert?vcands:cands;
+    for(const c of list){const ax=cx+c[0],ay=cy+c[1];let x0,x1;const anc=c[2];
+      if(anc==='start'){x0=ax;x1=ax+w;}else if(anc==='end'){x1=ax;x0=ax-w;}else{x0=ax-w/2;x1=ax+w/2;}
+      const box={x0,x1,y0:ay-fh,y1:ay+2};
+      if(within(box)&&!hit(box)){ch={ax,ay,anc,box};break;}}
+    if(!ch){const ax=cx+11,ay=cy+3;ch={ax,ay,anc:'start',box:{x0:ax,x1:ax+w,y0:ay-fh,y1:ay+2}};}
+    placed.push(ch.box);
+    const near=(ch.ax>=cx-3&&ch.ax<=cx+12&&Math.abs(ch.ay-cy)<8);
+    let o='';
+    if(!near){const lx=ch.anc==='end'?ch.box.x1:(ch.anc==='middle'?cx:ch.box.x0);
+      const ly=ch.ay<cy?ch.box.y1:ch.box.y0;
+      o+=`<line x1="${cx}" y1="${cy}" x2="${lx}" y2="${ly}" stroke="#aeb8c4" stroke-width="1"/>`;}
+    o+=`<text x="${ch.ax}" y="${ch.ay}" font-size="${fh}" fill="${color}"${bold?' font-weight="bold"':''} text-anchor="${ch.anc}" paint-order="stroke" stroke="#fff" stroke-width="2.4" stroke-linejoin="round">${text}</text>`;
+    return o;}
+  // dots first (so all labels paint on top), then labels (Akamai first = priority)
+  provs.forEach(p=>{s+=`<circle cx="${sx(p.x)}" cy="${sy(p.y)}" r="4" fill="#3b6ea5" opacity="0.9" data-tip="${ptip(p)}"/>`;});
+  let labs='';
+  if(ay!=null){
+    akas.forEach(a=>{s+=`<circle cx="${sx(a.x)}" cy="${sy(ay)}" r="4.5" fill="#F26B21" stroke="#fff" stroke-width="1.5" data-tip="${atip(a)}"/>`;});
+    akas.forEach(a=>{labs+=label(sx(a.x),sy(ay),a.n+' $'+a.x.toFixed(a.x>=10?0:2),'#c94f10',true,true);});
+    provs.forEach(p=>{labs+=label(sx(p.x),sy(p.y),p.name,'#42505f',false);});
+  } else {
+    akas.forEach((a,i)=>{const X=sx(a.x);
+      s+=`<line x1="${X}" y1="${mt}" x2="${X}" y2="${H-mb}" stroke="#F26B21" stroke-dasharray="5 3" opacity="0.85"/>`;
+      const t=a.n+' $'+a.x.toFixed(a.x>=10?0:2),w=t.length*6,ax=X,ry=mt+9+i*12;
+      placed.push({x0:ax-w/2,x1:ax+w/2,y0:ry-10,y1:ry+2});
+      labs+=`<text x="${ax}" y="${ry}" font-size="10" fill="#c94f10" text-anchor="middle" font-weight="bold" paint-order="stroke" stroke="#fff" stroke-width="2.4">${t}</text>`;});
+    labs+=`<text x="${W-mr-4}" y="${H-mb-4}" font-size="9" fill="#c94f10" text-anchor="end" paint-order="stroke" stroke="#fff" stroke-width="2.4">Akamai price (partner perf not measured)</text>`;
+    provs.forEach(p=>{labs+=label(sx(p.x),sy(p.y),p.name,'#42505f',false);});
+  }
+  s+=labs;
+  svg.innerHTML=s;
+}
+function renderMaps(){
+  scatter('mapLat',p=>p.lat,'Latency (s) — lower is better',
+    {tl:'slow · cheap',tr:'slow · costly',bl:'fast · cheap ✓',br:'fast · costly'});
+  scatter('mapTps',p=>p.tps,'Throughput (TPS) — higher is better',
+    {tl:'fast · cheap ✓',tr:'fast · costly',bl:'slow · cheap',br:'slow · costly'});
+  if(MAPBASIS!=='blend'){const M=DATA.models[+MAPBASIS];const wperf=M.providers.filter(p=>p.tps!=null).length;
+    $('srcnote').innerHTML='Basis: '+M.label+'. Source: <a href="'+M.url+'" target="_blank">'+M.url+'</a>. '+M.providers.length+' providers, '+wperf+' with measured performance.';
+  } else {
+    $('srcnote').innerHTML='Basis: blended across all 6 models — each provider weighted by the consumption split below, renormalised over the models it serves. '+mapData().provs.length+' providers.';
+  }
+}
+function curProvs(){return mapData().provs;}
+function defaultSel(){SEL=new Set(curProvs().filter(p=>DATA.main.indexOf(p.name)>=0).map(p=>p.name));}
+function updateSelCount(){$('selCount').textContent=SEL.size+' of '+curProvs().length+' shown  (° = no measured performance)';}
+function renderProviderSelect(){
+  let h='';curProvs().forEach(p=>{const on=SEL.has(p.name);const noperf=(p.tps==null);
+    h+='<span class="chip'+(on?' on':'')+(noperf?' noperf':'')+'" data-p="'+p.name+'">'+p.name+(noperf?' °':'')+'</span>';});
+  $('provPick').innerHTML=h;
+  $('provPick').querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{
+    const n=c.dataset.p;if(SEL.has(n))SEL.delete(n);else SEL.add(n);renderProviderSelect();renderMaps();}));
+  updateSelCount();
+}
+function initMapBasis(){let h='<option value="blend">Blended (all 6 models)</option>';
+  DATA.models.forEach((m,i)=>{h+='<option value="'+i+'">'+m.label+'</option>';});
+  $('mapbasis').innerHTML=h;$('mapbasis').value=MAPBASIS;}
+
+// ---------- forecast
+function renderSplit(){
+  let h='';DATA.models.forEach((m,i)=>{h+=`<div class="splitrow"><label>${m.label}</label>`+
+    `<input type="number" step="1" value="${SPLIT[i]}" data-i="${i}">%</div>`;});
+  $('splitBox').innerHTML=h;
+  $('splitBox').querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{
+    SPLIT[inp.dataset.i]=+inp.value||0;runForecast();}));
+}
+function bindF(id,key){const el=$(id);el.value=F[key];el.addEventListener('input',()=>{F[key]=(id==='fPricing')?el.value:(+el.value||0);runForecast();});}
+function runForecast(){
+  const sum=SPLIT.reduce((a,b)=>a+b,0);
+  $('splitSum').innerHTML=(sum!==100?'<span class="sumbad">('+sum+'%, should be 100)</span>':'(100%)');
+  let priceBlend=0,retailBlend=0,costBlend=0;
+  DATA.models.forEach((m,i)=>{const w=SPLIT[i]/100;const r=m.retail;
+    const pm = F.pricing==='2'?blendO(m2O(r)):blendO(m1O(r));
+    priceBlend+=w*pm; retailBlend+=w*blendO(r); costBlend+=w*blendO(costO(r));});
+  const yr=[0,0,0],cogs=[0,0,0],tokM=[0,0,0],endU=[0,0,0];const months=[];
+  for(let t=1;t<=36;t++){
+    const users=F.users*Math.pow(1+F.grow/100,t-1);
+    const tpu=F.tpu*Math.pow(1+F.ramp/100,t-1);      // M tokens/user/mo
+    const totM=users*tpu;                             // M tokens this month
+    let rev;
+    if(F.pricing==='3'){const ov=Math.max(0,tpu-P.free);rev=users*(P.sub+ov*retailBlend);}
+    else{rev=totM*priceBlend;}
+    const y=Math.floor((t-1)/12);
+    yr[y]+=rev; cogs[y]+=totM*costBlend; tokM[y]+=totM; endU[y]=users;
+    months.push({t:t,users:users,tpu:tpu,totM:totM,rev:rev});
+  }
+  // KPIs: revenue + tokens per year, plus Y3 gross margin
+  let kp='';
+  for(let i=0;i<3;i++) kp+='<div class="k"><div class="n">'+M$(yr[i])+'</div><div class="lab">Year '+(i+1)+' revenue</div>'
+    +'<div class="lab" style="color:#c94f10;font-weight:bold">'+fmtTok(tokM[i])+' tokens</div></div>';
+  kp+='<div class="k"><div class="n">'+(100*(yr[2]-cogs[2])/(yr[2]||1)).toFixed(0)+'%</div><div class="lab">Y3 gross margin</div></div>';
+  $('fcKpis').innerHTML=kp;
+  // bar chart with tokens under each year
+  const svg=$('fcBar');const W=720,H=210,ml=50,mb=44,mt=14,mr=14;const mx=Math.max(yr[0],yr[1],yr[2],1);
+  const bw=(W-ml-mr)/3*0.5;let s='';
+  s+='<line x1="'+ml+'" y1="'+(H-mb)+'" x2="'+(W-mr)+'" y2="'+(H-mb)+'" stroke="#98a4b2"/>';
+  yr.forEach((v,i)=>{const cx=ml+(i+0.5)*(W-ml-mr)/3;const h=(v/mx)*(H-mt-mb);
+    s+='<rect x="'+(cx-bw/2)+'" y="'+(H-mb-h)+'" width="'+bw+'" height="'+h+'" fill="#0B2E4F" rx="3"/>'
+      +'<text x="'+cx+'" y="'+(H-mb-h-6)+'" font-size="12" text-anchor="middle" fill="#0B2E4F" font-weight="bold">'+M$(v)+'</text>'
+      +'<text x="'+cx+'" y="'+(H-mb+16)+'" font-size="11" text-anchor="middle" fill="#42505f">Year '+(i+1)+'</text>'
+      +'<text x="'+cx+'" y="'+(H-mb+30)+'" font-size="10" text-anchor="middle" fill="#c94f10">'+fmtTok(tokM[i])+' tok</text>';});
+  svg.innerHTML=s;
+  // yearly table
+  let yh='<tr><th class="l">Year</th><th>Customers (end)</th><th>Tokens</th><th>Revenue</th><th>Gross margin</th></tr>';
+  for(let i=0;i<3;i++){const gm=100*(yr[i]-cogs[i])/(yr[i]||1);
+    yh+='<tr><td class="l">Year '+(i+1)+'</td><td>'+Math.round(endU[i]).toLocaleString()+'</td><td>'+fmtTok(tokM[i])+'</td><td>'+M$(yr[i])+'</td><td>'+gm.toFixed(0)+'%</td></tr>';}
+  $('fcYear').innerHTML=yh;
+  // monthly ramp table (36 months)
+  let mh='<tr><th class="l">Month</th><th>Customers</th><th>Tokens/user (M)</th><th>Tokens</th><th>Revenue</th></tr>';
+  months.forEach(m=>{mh+='<tr><td class="l">'+m.t+'</td><td>'+Math.round(m.users).toLocaleString()+'</td><td>'+m.tpu.toFixed(1)+'</td><td>'+fmtTok(m.totM)+'</td><td>'+D$(m.rev)+'</td></tr>';});
+  $('fcMonth').innerHTML=mh;
+  // note
+  const pl = F.pricing==='3'?('subscription $'+P.sub+'/user + overage'):('$'+priceBlend.toFixed(4)+'/1M blended');
+  const modeName=F.pricing==='1'?'Model 1':F.pricing==='2'?'Model 2':'Model 3';
+  let note='Priced on '+modeName+' at '+pl+', discount '+P.d+'%, markup '+P.m+'%.';
+  if(F.pricing==='1') note+=' Each token type (input, cached, output) is marked up then capped at the partner retail for that type; the blended figure is the mix of those capped components.';
+  $('fcnote').innerHTML=note;
+}
+
+// ---------- sensitivity heatmaps
+const DS=[0,5,10,15,20,25,30,35,40,45,50];
+const MS=[0,10,20,30,40,50,60,70,80,90,100];
+function heatColor(mg){const t=Math.max(0,Math.min(1,(mg+0.2)/0.7));const h=t*120;const L=52-t*7;
+  return 'hsl('+h.toFixed(0)+',68%,'+L.toFixed(0)+'%)';}
+function heatGrid(fn){
+  let h='<table><tr><td class="rh">d \\ m</td>';
+  MS.forEach(m=>{h+='<th>'+m+'%</th>';});h+='</tr>';
+  DS.forEach(d=>{h+='<tr><td class="rh">'+d+'%</td>';
+    MS.forEach(m=>{const mg=fn(d/100,m/100);const c=heatColor(mg);
+      const hl=(Math.round(P.d/5)*5===d)&&(Math.round(P.m/10)*10===m);
+      const st='background:'+c+(hl?';outline:3px solid #0B2E4F;outline-offset:-3px;font-weight:bold':'');
+      h+='<td style="'+st+'">'+(mg*100).toFixed(0)+'%</td>';});
+    h+='</tr>';});
+  return h+'</table>';}
+function heatGrid2(){
+  const B=basisRetail();const orate=blendO(B.retail);const cblend=orate*(1-P.d/100);const free=P.free;
+  const SUBS=[100,80,60,50,40,30,25,20,15,10];
+  const USE=[5,10,20,40,60,80,100,150,250,400];
+  const nu=USE.reduce((a,b)=>Math.abs(b-P.tpu)<Math.abs(a-P.tpu)?b:a);
+  const ns=SUBS.reduce((a,b)=>Math.abs(b-P.sub)<Math.abs(a-P.sub)?b:a);
+  let h='<table><tr><td class="rh">$/user \\ usage M</td>';
+  USE.forEach(u=>{h+='<th>'+u+'</th>';});h+='</tr>';
+  SUBS.forEach(S=>{h+='<tr><td class="rh">$'+S+'</td>';
+    USE.forEach(U=>{const ov=Math.max(0,U-free);const rev=S+ov*orate;const cogs=U*cblend;
+      const mg=rev>0?(rev-cogs)/rev:-1;const c=heatColor(mg);
+      const cur=(U===nu&&S===ns);
+      const st='background:'+c+(cur?';outline:3px solid #0B2E4F;outline-offset:-3px;font-weight:bold':'');
+      const disp=mg<-1?'&lt;-100%':(mg*100).toFixed(0)+'%';
+      h+='<td style="'+st+'">'+disp+'</td>';});
+    h+='</tr>';});
+  return h+'</table>';}
+function renderSensitivity(){
+  const B=basisRetail();
+  const retailB=blendO(B.retail);
+  const mktB=blendO({in:B.market.in,cached:B.market.cached,out:B.market.out});
+  const mktMedB=blendO({in:B.market.medIn,cached:B.market.medCached,out:B.market.medOut});
+  const ceilB=(CEIL==='baseten')?retailB:mktB;
+  $('grid1').innerHTML=heatGrid((d,m)=>m/(1+m));
+  $('grid2').innerHTML=heatGrid((d,m)=>{const cost=retailB*(1-d);const list=Math.min(cost*(1+m),ceilB);return (list-cost)/list;});
+  $('grid3').innerHTML=heatGrid2();
+  $('ceilLab').textContent='list = min( cost \u00d7 (1+m), '+money(ceilB)+' )';
+  let info=B.label+': cost-basis retail '+money(retailB)+' \u00b7 market mean '+money(mktB)+' \u00b7 market median '+money(mktMedB);
+  if(CEIL==='market'&&mktB<retailB) info+=' \u2014 market ceiling sits below the cost basis, so shallow discounts push margin negative.';
+  $('ceilInfo').innerHTML=info;}
+
+function showTab(t){
+  ['model','fc','rec'].forEach(k=>{
+    $('tab-'+k).classList.toggle('hide',k!==t);
+    $('tab'+k.charAt(0).toUpperCase()+k.slice(1)+'Btn').classList.toggle('active',k===t);});}
+function updateRec(){const mk=P.m,mg=mk/(100+mk)*100;
+  const a=$('recMk'),b=$('recMg');if(a)a.textContent=mk+'%';if(b)b.textContent=mg.toFixed(1)+'%';}
+// ---------- wire up
+function render(){renderPrice();renderProviderSelect();renderMaps();renderSensitivity();runForecast();updateRec();}
+function init(){
+  initModelSelect();$('model').value=P.model;$('model').addEventListener('change',()=>{const v=$('model').value;P.model=(v==='blend')?'blend':+v;render();});
+  bindRange('d','d',v=>v+'%');bindRange('m','m',v=>v+'%');
+  bindNum('sub','sub');bindNum('free','free');bindNum('tpu','tpu');
+  bindNum('mi','mi');bindNum('mc','mc');bindNum('mo','mo');
+  renderSplit();
+  initMapBasis();
+  $('mapbasis').addEventListener('change',()=>{MAPBASIS=$('mapbasis').value;defaultSel();renderProviderSelect();renderMaps();});
+  $('selAll').addEventListener('click',()=>{SEL=new Set(curProvs().map(p=>p.name));renderProviderSelect();renderMaps();});
+  $('selMain').addEventListener('click',()=>{defaultSel();renderProviderSelect();renderMaps();});
+  $('selNone').addEventListener('click',()=>{SEL=new Set();renderProviderSelect();renderMaps();});
+  ['mapLat','mapTps'].forEach(id=>{const el=$(id);if(!el)return;
+    el.addEventListener('mousemove',e=>{const t=(e.target&&e.target.getAttribute)?e.target.getAttribute('data-tip'):null;const tip=$('maptip');
+      if(t){tip.innerHTML=t.split('\n').map((ln,i)=>i===0?'<b>'+ln+'</b>':ln).join('<br>');tip.style.display='block';
+        let x=e.clientX+14,y=e.clientY+14;if(x>window.innerWidth-250)x=e.clientX-238;tip.style.left=x+'px';tip.style.top=y+'px';}
+      else tip.style.display='none';});
+    el.addEventListener('mouseleave',()=>{$('maptip').style.display='none';});});
+  $('ceil').addEventListener('change',()=>{CEIL=$('ceil').value;renderSensitivity();});
+  bindF('fUsers','users');bindF('fGrow','grow');bindF('fTpu','tpu');bindF('fRamp','ramp');bindF('fPricing','pricing');
+  defaultSel();
+  render();
+}
+init();
+</script>
+</body></html>
